@@ -1,4 +1,6 @@
-def zeroAllInputs(dut):
+from top_stack import TopStack
+
+def zeroAllInputs(dut: TopStack):
     for i in dut.in_mem:
         yield i.eq(0)
     for i in dut.in_push:
@@ -9,7 +11,23 @@ def zeroAllInputs(dut):
     for i in dut.in_writeback:
         yield i.eq(0)
 
-def feedForwardSwizzles(dut):
-    for stage in dut.in_stack_swizzle:
-        for depth in range(len(stage)):
-            yield stage[depth].eq(depth)
+def feedForwardAtStage(dut: TopStack, stage: int):
+    stack_depth = len(dut.in_stack_swizzle[stage])
+    for slot in range(stack_depth):
+        yield dut.in_stack_swizzle[stage][slot].eq(slot)
+
+def feedForwardAllStages(dut: TopStack):
+    for stage in range(len(dut.in_stack_swizzle)):
+        yield from feedForwardAtStage(dut, stage)
+
+def pushStackAtStage(dut: TopStack, stage: int):
+    stack_depth = len(dut.in_stack_swizzle[stage])
+    for slot in range(stack_depth):
+        if slot == 0:
+            yield dut.in_stack_swizzle[stage][slot].eq(stack_depth)
+        else:
+            yield dut.in_stack_swizzle[stage][slot].eq(slot-1)
+
+def pushStackAllStages(dut: TopStack):
+    for stage in range(len(dut.in_stack_swizzle)):
+        yield from pushStackAtStage(dut, stage)

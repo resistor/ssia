@@ -7,11 +7,11 @@ dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, wr
 # Test 002: Set top slot in stage 1, simple feed-forward
 def test_process():
     yield from zeroAllInputs(dut)
-    yield from feedForwardSwizzles(dut)
+    yield from feedForwardAllStages(dut)
     yield dut.in_push[0].eq(0x7FFFFFFFF)
     yield dut.in_stack_swizzle[0][0].eq(4)
 
-    # After cycle 1, the value should be in the
+    # On cycle 0, the value should be in the
     # top stack slot for all issue stages.
     yield
     assert (yield dut.out_peek[0][0]['tag']) == 0
@@ -39,33 +39,34 @@ def test_process():
     assert (yield dut.out_bottom[3]['tag']) == 0
     assert (yield dut.out_bottom[3]['val']) == 0
 
-    # After cycle 2, the value should be in the top
+    # After subsequent cycles, the value should be in the top
     # slot for all stages.
-    yield
-    assert (yield dut.out_peek[0][0]['tag']) == 7
-    assert (yield dut.out_peek[0][0]['val']) == 0xFFFFFFFF
-    assert (yield dut.out_peek[0][1]['tag']) == 0
-    assert (yield dut.out_peek[0][1]['val']) == 0
-    assert (yield dut.out_peek[1][0]['tag']) == 7
-    assert (yield dut.out_peek[1][0]['val']) == 0xFFFFFFFF
-    assert (yield dut.out_peek[1][1]['tag']) == 0
-    assert (yield dut.out_peek[1][1]['val']) == 0
-    assert (yield dut.out_peek[2][0]['tag']) == 7
-    assert (yield dut.out_peek[2][0]['val']) == 0xFFFFFFFF
-    assert (yield dut.out_peek[2][1]['tag']) == 0
-    assert (yield dut.out_peek[2][1]['val']) == 0
-    assert (yield dut.out_peek[3][0]['tag']) == 7
-    assert (yield dut.out_peek[3][0]['val']) == 0xFFFFFFFF
-    assert (yield dut.out_peek[3][1]['tag']) == 0
-    assert (yield dut.out_peek[3][1]['val']) == 0
-    assert (yield dut.out_bottom[0]['tag']) == 0
-    assert (yield dut.out_bottom[0]['val']) == 0
-    assert (yield dut.out_bottom[1]['tag']) == 0
-    assert (yield dut.out_bottom[1]['val']) == 0
-    assert (yield dut.out_bottom[2]['tag']) == 0
-    assert (yield dut.out_bottom[2]['val']) == 0
-    assert (yield dut.out_bottom[3]['tag']) == 0
-    assert (yield dut.out_bottom[3]['val']) == 0
+    for i in range(3):
+        yield
+        assert (yield dut.out_peek[0][0]['tag']) == 7
+        assert (yield dut.out_peek[0][0]['val']) == 0xFFFFFFFF
+        assert (yield dut.out_peek[0][1]['tag']) == 0
+        assert (yield dut.out_peek[0][1]['val']) == 0
+        assert (yield dut.out_peek[1][0]['tag']) == 7
+        assert (yield dut.out_peek[1][0]['val']) == 0xFFFFFFFF
+        assert (yield dut.out_peek[1][1]['tag']) == 0
+        assert (yield dut.out_peek[1][1]['val']) == 0
+        assert (yield dut.out_peek[2][0]['tag']) == 7
+        assert (yield dut.out_peek[2][0]['val']) == 0xFFFFFFFF
+        assert (yield dut.out_peek[2][1]['tag']) == 0
+        assert (yield dut.out_peek[2][1]['val']) == 0
+        assert (yield dut.out_peek[3][0]['tag']) == 7
+        assert (yield dut.out_peek[3][0]['val']) == 0xFFFFFFFF
+        assert (yield dut.out_peek[3][1]['tag']) == 0
+        assert (yield dut.out_peek[3][1]['val']) == 0
+        assert (yield dut.out_bottom[0]['tag']) == 0
+        assert (yield dut.out_bottom[0]['val']) == 0
+        assert (yield dut.out_bottom[1]['tag']) == 0
+        assert (yield dut.out_bottom[1]['val']) == 0
+        assert (yield dut.out_bottom[2]['tag']) == 0
+        assert (yield dut.out_bottom[2]['val']) == 0
+        assert (yield dut.out_bottom[3]['tag']) == 0
+        assert (yield dut.out_bottom[3]['val']) == 0
 
 def test():
     sim = Simulator(dut)
