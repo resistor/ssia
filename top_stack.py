@@ -11,7 +11,7 @@ class TopStack(Elaboratable):
     # issue_stages: the number of instructions to be issued in a single cycle
     # tag_width: the number of bits to use to tag unretired instructions
     # writeback_count: the number of values that can be retired in a single cycle
-    def __init__(self, register_width, stack_depth, issue_stages, tag_width, writeback_count):
+    def __init__(self, register_width: int, stack_depth: int, issue_stages: int, tag_width: int, writeback_count: int):
         self._stack_depth = stack_depth
         self._tag_width = tag_width
         self._issue_stages = issue_stages
