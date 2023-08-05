@@ -36,10 +36,10 @@ class TopStack(Elaboratable):
             single_swizzle = []
             for d in range(stack_depth):
                 if d == 0 or d == stack_depth-1:
-                    single_swizzle.append(Signal(range(stack_depth+1), name="swizzle_"+str(s)+"_"+str(d)))
+                    single_swizzle.append(Signal(range(stack_depth+1), name="in_swizzle_"+str(s)+"_"+str(d)))
                 else:
-                    single_swizzle.append(Signal(range(stack_depth), name="swizzle_"+str(s)+"_"+str(d)))
-                self.in_stack_swizzle.append(single_swizzle)
+                    single_swizzle.append(Signal(range(stack_depth), name="in_swizzle_"+str(s)+"_"+str(d)))
+            self.in_stack_swizzle.append(single_swizzle)
 
         # out_peek: two register+tag per issue stage that are the two top-most entries in the stack
         self.out_peek = [[Signal(self._register_layout, name = "out_peek_"+str(y)+"_"+str(x)) for x in range(2)] for y in range(issue_stages)]
@@ -84,7 +84,7 @@ class TopStack(Elaboratable):
 
             # Check for value write-backs before latching.
             for c in self.in_writeback:
-                writeback_matched = c['tag'] == stacks[self._stack_depth][d]['tag']
+                writeback_matched = (c['tag'] != 0) & (c['tag'] == stacks[self._stack_depth][d]['tag'])
                 writeback_val = Mux(writeback_matched, Cat(c['val'], Const(1, self._tag_width)), writeback_val)
             m.d.sync += stacks[0][d].eq(writeback_val)
 
