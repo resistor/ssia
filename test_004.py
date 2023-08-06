@@ -13,7 +13,7 @@ def test_process():
     yield dut.in_mem[2].eq(0x39ABCDEF0)
     yield dut.in_mem[3].eq(0x40FEDCBA9)
 
-    # On cycle 0, the values move down through the stack
+    # On cycle 0, the values move up through the stack
     # gradually replacing the initial zeros.
     yield
     assert (yield dut.out_peek[0][0]['tag']) == 0
@@ -41,8 +41,8 @@ def test_process():
     assert (yield dut.out_bottom[3]['tag']) == 0x3
     assert (yield dut.out_bottom[3]['val']) == 0x9ABCDEF0
 
-    # On subsequent cycles, the same values are pushed
-    # again in the same sequence, pushing down the values
+    # On subsequent cycles, the same values are popped
+    # again in the same sequence, pushing up the values
     # that were already present
     for i in range(3):
         yield
