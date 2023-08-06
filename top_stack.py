@@ -84,7 +84,7 @@ class TopStack(Elaboratable):
 
             # Check for value write-backs before latching.
             for c in self.in_writeback:
-                writeback_matched = (c['tag'] != 0) & (c['tag'] == stacks[self._stack_depth][d]['tag'])
+                writeback_matched = (c['tag'] != 0) & (c['tag'] == stacks[self._issue_stages][d]['tag'])
                 writeback_val = Mux(writeback_matched, Cat(c['val'], Const(1, self._tag_width)), writeback_val)
             m.d.sync += stacks[0][d].eq(writeback_val)
 
