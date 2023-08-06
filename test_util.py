@@ -31,3 +31,12 @@ def pushStackAtStage(dut: TopStack, stage: int):
 def pushStackAllStages(dut: TopStack):
     for stage in range(len(dut.in_stack_swizzle)):
         yield from pushStackAtStage(dut, stage)
+
+def popStackAtStage(dut: TopStack, stage: int):
+    stack_depth = len(dut.in_stack_swizzle[stage])
+    for slot in range(stack_depth):
+        yield dut.in_stack_swizzle[stage][slot].eq(slot+1)
+
+def popStackAllStages(dut: TopStack):
+    for stage in range(len(dut.in_stack_swizzle)):
+        yield from popStackAtStage(dut, stage)
