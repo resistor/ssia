@@ -1,10 +1,11 @@
 from amaranth import *
 from amaranth.hdl import *
 from amaranth.back import verilog
-from amaranth_boards.icestick import *
-from amaranth.lib.enum import Enum
 from amaranth.lib.data import StructLayout
 
+# TopStack is the hot zone at the very top of the processor's stack. It supports delayed writebacks, as well
+# as arbitary swizzling of its contents at each input stage. Increasing the depth of this portion of the stack
+# has non-linear area cost due to the arbitrary swizzles.
 class TopStack(Elaboratable):
     # register_width: the width in bits of individual stack entries
     # stack_depth: the number of stack entries stored within the top-stack region
@@ -47,7 +48,7 @@ class TopStack(Elaboratable):
         # out_bottom: one register+tag per issue stage that is the lowest entry in the top-stack
         self.out_bottom = [Signal(self._register_layout, name="out_bottom"+str(x)) for x in range(issue_stages)]
 
-        # in_writeback: write_backcount register+tag which are tag-matched and written back each cycle
+        # in_writeback: writeback_count register+tag which are tag-matched and written back each cycle
         self.in_writeback = [Signal(self._register_layout, name="in_cdb_"+str(x)) for x in range(writeback_count)]
     
     def elaborate(self, platform):
