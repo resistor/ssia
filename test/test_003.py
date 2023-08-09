@@ -1,11 +1,11 @@
 from amaranth.sim import Simulator
-from top_stack import TopStack
-from test_util import *
+from ssia.top_stack import TopStack
+from util import *
 
 dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
 
 # Test 003: Push the four values in a single cycle
-def test_process():
+def process():
     yield from zeroAllInputs(dut)
     yield from pushStackAllStages(dut)
     yield dut.in_push[0].eq(0x112345678)
@@ -71,12 +71,15 @@ def test_process():
         assert (yield dut.out_bottom[3]['tag']) == 0x4
         assert (yield dut.out_bottom[3]['val']) == 0x0FEDCBA9
 
-def test():
+def test(debug: bool = False):
     sim = Simulator(dut)
     sim.add_clock(1e-6)
-    sim.add_sync_process(test_process)
-    with sim.write_vcd('test_003.vcd'):
+    sim.add_sync_process(process)
+    if debug:
+        with sim.write_vcd('test_003.vcd'):
+            sim.run()
+    else:
         sim.run()
 
 if __name__ == '__main__':
-    test()
+    test(debug = True)

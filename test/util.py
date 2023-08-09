@@ -1,4 +1,4 @@
-from top_stack import TopStack
+from ssia.top_stack import TopStack
 
 def zeroAllInputs(dut: TopStack):
     for i in dut.in_mem:
