@@ -1,12 +1,11 @@
 from amaranth.sim import Simulator
 from ssia.top_stack import TopStack
-from util import *
 
 dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
 
 # Test 001: All zero inputs.
 def process():
-    yield from zeroAllInputs(dut)
+    yield from dut.zeroAllInputs()
     yield
     for stage in dut.out_peek:
         for peek in stage:

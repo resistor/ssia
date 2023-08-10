@@ -81,6 +81,38 @@ class MidStack(Elaboratable):
 
         return m
     
+    # Testing helpers
+    def zeroAllInputs(self):
+        for i in self.in_mem:
+            yield i.eq(0)
+        for i in self.in_push:
+            yield i.eq(0)
+        for i in self.in_stack_swizzle:
+            yield i.eq(0)
+        for i in self.in_writeback:
+            yield i.eq(0)
+
+    def feedForwardAtStage(self, stage: int):
+        yield self.in_stack_swizzle[stage].eq(MidStackCommand.NOP)
+
+    def feedForwardAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.feedForwardAtStage(stage)
+
+    def pushStackAtStage(self, stage: int):
+        yield self.in_stack_swizzle[stage].eq(MidStackCommand.PUSH)
+
+    def pushStackAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.pushStackAtStage(stage)
+
+    def popStackAtStage(self, stage: int):
+        yield self.in_stack_swizzle[stage].eq(MidStackCommand.POP)
+
+    def popStackAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.popStackAtStage(stage)
+    
 if __name__ == '__main__':
     mid_stack = MidStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
     with open('mid_stack.v', 'w') as f:

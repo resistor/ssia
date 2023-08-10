@@ -91,6 +91,48 @@ class TopStack(Elaboratable):
 
         return m
 
+    # Testing helpers
+    def zeroAllInputs(self):
+        for i in self.in_mem:
+            yield i.eq(0)
+        for i in self.in_push:
+            yield i.eq(0)
+        for i in self.in_stack_swizzle:
+            for j in i:
+                yield j.eq(0)
+        for i in self.in_writeback:
+            yield i.eq(0)
+
+    def feedForwardAtStage(self, stage: int):
+        stack_depth = len(self.in_stack_swizzle[stage])
+        for slot in range(stack_depth):
+            yield self.in_stack_swizzle[stage][slot].eq(slot)
+
+    def feedForwardAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.feedForwardAtStage(stage)
+
+    def pushStackAtStage(self, stage: int):
+        stack_depth = len(self.in_stack_swizzle[stage])
+        for slot in range(stack_depth):
+            if slot == 0:
+                yield self.in_stack_swizzle[stage][slot].eq(stack_depth)
+            else:
+                yield self.in_stack_swizzle[stage][slot].eq(slot-1)
+
+    def pushStackAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.pushStackAtStage(stage)
+
+    def popStackAtStage(self, stage: int):
+        stack_depth = len(self.in_stack_swizzle[stage])
+        for slot in range(stack_depth):
+            yield self.in_stack_swizzle[stage][slot].eq(slot+1)
+
+    def popStackAllStages(self):
+        for stage in range(len(self.in_stack_swizzle)):
+            yield from self.popStackAtStage(stage)
+
 if __name__ == '__main__':
     top_stack = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
     with open('top_stack.v', 'w') as f:

@@ -1,13 +1,12 @@
 from amaranth.sim import Simulator
 from ssia.top_stack import TopStack
-from util import *
 
 dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
 
 # Test 002: Set top slot in stage 1, simple feed-forward
 def process():
-    yield from zeroAllInputs(dut)
-    yield from feedForwardAllStages(dut)
+    yield from dut.zeroAllInputs()
+    yield from dut.feedForwardAllStages()
     yield dut.in_push[0].eq(0x7FFFFFFFF)
     yield dut.in_stack_swizzle[0][0].eq(4)
 

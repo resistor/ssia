@@ -1,13 +1,12 @@
 from amaranth.sim import Simulator
 from ssia.top_stack import TopStack
-from util import *
 
 dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
 
 # Test 005: Write-back
 def process():
-    yield from zeroAllInputs(dut)
-    yield from feedForwardAllStages(dut)
+    yield from dut.zeroAllInputs()
+    yield from dut.feedForwardAllStages()
     yield dut.in_push[0].eq(0x700000000)
     yield dut.in_stack_swizzle[0][0].eq(4)
     yield dut.in_writeback[0].eq(0x733333333)

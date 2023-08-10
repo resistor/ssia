@@ -1,13 +1,12 @@
 from amaranth.sim import Simulator
 from ssia.top_stack import TopStack
-from util import *
 
 dut = TopStack(register_width=32, stack_depth=4, issue_stages=4, tag_width=3, writeback_count=1)
 
 # Test 003: Push the four values in a single cycle
 def process():
-    yield from zeroAllInputs(dut)
-    yield from pushStackAllStages(dut)
+    yield from dut.zeroAllInputs()
+    yield from dut.pushStackAllStages()
     yield dut.in_push[0].eq(0x112345678)
     yield dut.in_push[1].eq(0x287654321)
     yield dut.in_push[2].eq(0x39ABCDEF0)
