@@ -51,17 +51,35 @@ class MidStack(Elaboratable):
 
         for stage in range(self._issue_stages):
             # The top slot can be any feed-forward, one down, or a new pushed value.
+            with m.Switch(self.in_stack_swizzle[stage]):
+                with m.Case(MidStackCommand.POP):
+                    m.d.comb += stacks[stage+1][0].eq(stacks[stage][1])
+                with m.Case(MidStackCommand.PUSH):
+                    m.d.comb += stacks[stage+1][0].eq(self.in_push[stage])
+                with m.Default():
+                    m.d.comb += stacks[stage+1][0].eq(stacks[stage][0])
+
             first_mux = Array([stacks[stage][0], stacks[stage][1], Cat(self.in_push[stage], Const(1, self._tag_width))])
             m.d.comb += stacks[stage+1][0].eq(first_mux[self.in_stack_swizzle[stage]])
 
             # Intermediary slots can be either feed-forward, one below, or one above.
             for d in range(self._stack_depth-2):
-                mux = Array([stacks[stage][d+1], stacks[stage][d+2], stacks[stage][d]])
-                m.d.comb += stacks[stage+1][d+1].eq(mux[self.in_stack_swizzle[stage]])
+                with m.Switch(self.in_stack_swizzle[stage]):
+                    with m.Case(MidStackCommand.POP):
+                        m.d.comb += stacks[stage+1][d+1].eq(stacks[stage][d+2])
+                    with m.Case(MidStackCommand.PUSH):
+                        m.d.comb += stacks[stage+1][d+1].eq(stacks[stage][d])
+                    with m.Default():
+                        m.d.comb += stacks[stage+1][d+1].eq(stacks[stage][d+1])
 
-            # The bottom slot can be either feed-forward, a new value, or one about
-            last_mux = Array([stacks[stage][d+1], self.in_mem[stage], stacks[stage][d]])
-            m.d.comb += stacks[stage+1][self._stack_depth-1].eq(last_mux[self.in_stack_swizzle[stage]])
+            # The bottom slot can be either feed-forward, a new value, or one above.
+            with m.Switch(self.in_stack_swizzle[stage]):
+                    with m.Case(MidStackCommand.POP):
+                        m.d.comb += stacks[stage+1][self._stack_depth-1].eq(self.in_mem[stage])
+                    with m.Case(MidStackCommand.PUSH):
+                        m.d.comb += stacks[stage+1][self._stack_depth-1].eq(stacks[stage][self._stack_depth-2])
+                    with m.Default():
+                        m.d.comb += stacks[stage+1][self._stack_depth-1].eq(stacks[stage][self._stack_depth-1])
 
             # Expose the top stack entry at each stage as a "peek" value.
             m.d.comb += self.out_peek[stage].eq(stacks[stage][0])
