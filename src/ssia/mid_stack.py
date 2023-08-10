@@ -57,7 +57,7 @@ class MidStack(Elaboratable):
             # Intermediary slots can be either feed-forward, one below, or one above.
             for d in range(self._stack_depth-2):
                 mux = Array([stacks[stage][d+1], stacks[stage][d+2], stacks[stage][d]])
-                m.d.comb += stacks[stage+1][d+1].eq(first_mux[self.in_stack_swizzle[stage]])
+                m.d.comb += stacks[stage+1][d+1].eq(mux[self.in_stack_swizzle[stage]])
 
             # The bottom slot can be either feed-forward, a new value, or one about
             last_mux = Array([stacks[stage][d+1], self.in_mem[stage], stacks[stage][d]])
