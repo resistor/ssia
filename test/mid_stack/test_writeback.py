@@ -8,7 +8,7 @@ def process():
     yield from dut.zeroAllInputs()
     yield from dut.feedForwardAllStages()
     yield dut.in_push[0].eq(0x700000000)
-    yield dut.in_stack_swizzle[0].eq(MidStackCommand.PUSH)
+    yield dut.in_stack_pushpop[0].eq(MidStackCommand.PUSH)
     yield dut.in_writeback[0].eq(0x733333333)
 
     # On cycle 0, the value should be in the

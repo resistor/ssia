@@ -29,9 +29,9 @@ class MidStack(Elaboratable):
         # in_mem: one register+tag per issue stage that is pulled up from lower in the stack
         self.in_mem = [Signal(self._register_layout, name="in_mem_"+str(x)) for x in range(issue_stages)]
 
-        # in_swizzle: One nop/pop/push command per stage.
+        # in_pushpop: One nop/pop/push command per stage.
         # 0b00 encodes no change, 0b10 encodes a pop, and 0b10 encodes a push.
-        self.in_stack_swizzle = [Signal(MidStackCommand, name="in_swizzle_"+str(s)) for s in range(issue_stages)]
+        self.in_stack_pushpop = [Signal(MidStackCommand, name="in_pushpop_"+str(s)) for s in range(issue_stages)]
 
         # out_peek: one register+tag per issue stage that is the top-most entries in the stack
         self.out_peek = [Signal(self._register_layout, name = "out_peek_"+str(y)) for y in range(issue_stages)]
@@ -51,7 +51,7 @@ class MidStack(Elaboratable):
 
         for stage in range(self._issue_stages):
             # The top slot can be any feed-forward, one down, or a new pushed value.
-            with m.Switch(self.in_stack_swizzle[stage]):
+            with m.Switch(self.in_stack_pushpop[stage]):
                 with m.Case(MidStackCommand.POP):
                     m.d.comb += stacks[stage+1][0].eq(stacks[stage][1])
                 with m.Case(MidStackCommand.PUSH):
@@ -60,11 +60,11 @@ class MidStack(Elaboratable):
                     m.d.comb += stacks[stage+1][0].eq(stacks[stage][0])
 
             first_mux = Array([stacks[stage][0], stacks[stage][1], Cat(self.in_push[stage], Const(1, self._tag_width))])
-            m.d.comb += stacks[stage+1][0].eq(first_mux[self.in_stack_swizzle[stage]])
+            m.d.comb += stacks[stage+1][0].eq(first_mux[self.in_stack_pushpop[stage]])
 
             # Intermediary slots can be either feed-forward, one below, or one above.
             for d in range(self._stack_depth-2):
-                with m.Switch(self.in_stack_swizzle[stage]):
+                with m.Switch(self.in_stack_pushpop[stage]):
                     with m.Case(MidStackCommand.POP):
                         m.d.comb += stacks[stage+1][d+1].eq(stacks[stage][d+2])
                     with m.Case(MidStackCommand.PUSH):
@@ -73,7 +73,7 @@ class MidStack(Elaboratable):
                         m.d.comb += stacks[stage+1][d+1].eq(stacks[stage][d+1])
 
             # The bottom slot can be either feed-forward, a new value, or one above.
-            with m.Switch(self.in_stack_swizzle[stage]):
+            with m.Switch(self.in_stack_pushpop[stage]):
                     with m.Case(MidStackCommand.POP):
                         m.d.comb += stacks[stage+1][self._stack_depth-1].eq(self.in_mem[stage])
                     with m.Case(MidStackCommand.PUSH):
@@ -105,30 +105,30 @@ class MidStack(Elaboratable):
             yield i.eq(0)
         for i in self.in_push:
             yield i.eq(0)
-        for i in self.in_stack_swizzle:
+        for i in self.in_stack_pushpop:
             yield i.eq(0)
         for i in self.in_writeback:
             yield i.eq(0)
 
     def feedForwardAtStage(self, stage: int):
-        yield self.in_stack_swizzle[stage].eq(MidStackCommand.NOP)
+        yield self.in_stack_pushpop[stage].eq(MidStackCommand.NOP)
 
     def feedForwardAllStages(self):
-        for stage in range(len(self.in_stack_swizzle)):
+        for stage in range(len(self.in_stack_pushpop)):
             yield from self.feedForwardAtStage(stage)
 
     def pushStackAtStage(self, stage: int):
-        yield self.in_stack_swizzle[stage].eq(MidStackCommand.PUSH)
+        yield self.in_stack_pushpop[stage].eq(MidStackCommand.PUSH)
 
     def pushStackAllStages(self):
-        for stage in range(len(self.in_stack_swizzle)):
+        for stage in range(len(self.in_stack_pushpop)):
             yield from self.pushStackAtStage(stage)
 
     def popStackAtStage(self, stage: int):
-        yield self.in_stack_swizzle[stage].eq(MidStackCommand.POP)
+        yield self.in_stack_pushpop[stage].eq(MidStackCommand.POP)
 
     def popStackAllStages(self):
-        for stage in range(len(self.in_stack_swizzle)):
+        for stage in range(len(self.in_stack_pushpop)):
             yield from self.popStackAtStage(stage)
     
 if __name__ == '__main__':
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                                 ports = [
                                          *map(asValue, mid_stack.in_push),
                                          *map(asValue, mid_stack.in_mem),
-                                         *mid_stack.in_stack_swizzle,
+                                         *mid_stack.in_stack_pushpop,
                                          *map(asValue, mid_stack.out_peek),
                                          *map(asValue, mid_stack.out_bottom),
                                          *map(asValue, mid_stack.in_writeback),

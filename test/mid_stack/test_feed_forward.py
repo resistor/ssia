@@ -8,7 +8,7 @@ def process():
     yield from dut.zeroAllInputs()
     yield from dut.feedForwardAllStages()
     yield dut.in_push[0].eq(0x7FFFFFFFF)
-    yield dut.in_stack_swizzle[0].eq(MidStackCommand.PUSH)
+    yield dut.in_stack_pushpop[0].eq(MidStackCommand.PUSH)
 
     # On cycle 0, the value should be in the
     # top stack slot for all issue stages.
@@ -33,7 +33,7 @@ def process():
     # After subsequent cycles, the value should be in the top
     # slot for all stages.
     for i in range(3):
-        yield dut.in_stack_swizzle[0].eq(MidStackCommand.NOP)
+        yield dut.in_stack_pushpop[0].eq(MidStackCommand.NOP)
         yield
         assert (yield dut.out_peek[0]['tag']) == 7
         assert (yield dut.out_peek[0]['val']) == 0xFFFFFFFF
